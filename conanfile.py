@@ -5,6 +5,7 @@ import shutil
 from conans import CMake, ConfigureEnvironment
 import platform
 
+
 class SDL2TTfConan(ConanFile):
     name = "SDL2_ttf"
     version = "2.0.14"
