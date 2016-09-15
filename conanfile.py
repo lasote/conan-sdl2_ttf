@@ -1,5 +1,5 @@
 from conans import ConanFile
-from conans.tools import download, unzip, replace_in_file
+from conans.tools import download, unzip, replace_in_file, vcvars_command
 import os
 import shutil
 from conans import CMake, ConfigureEnvironment
@@ -11,7 +11,7 @@ class SDL2TTfConan(ConanFile):
     folder = "SDL2_ttf-%s" % version
     settings = "os", "arch", "compiler", "build_type"
     options = {"shared": [True, False], "fPIC": [True, False]}
-    default_options = '''shared=False
+    default_options = '''shared=True
     fPIC=True'''
     generators = "cmake", "txt"
     url="http://github.com/lasote/conan-SDL2_ttf"
@@ -19,7 +19,7 @@ class SDL2TTfConan(ConanFile):
     license="MIT"
 
     def configure(self):
-        del self.settings.compiler.libcxx
+        # del self.settings.compiler.libcxx
         self.options["SDL2"].shared = self.options.shared
 
 
@@ -36,7 +36,6 @@ class SDL2TTfConan(ConanFile):
 
     def build_with_vs(self):
         env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
-        print(env.command_line)
 
         libdirs="<AdditionalLibraryDirectories>"
         libdirs_ext="<AdditionalLibraryDirectories>$(LIB);"
@@ -47,9 +46,12 @@ class SDL2TTfConan(ConanFile):
         replace_in_file("%s\VisualC\showfont\showfont.vcxproj" % self.folder, "<Link>", "<Link>%s</AdditionalLibraryDirectories>" % libdirs_ext)
         replace_in_file("%s\VisualC\showfont\showfont.vcxproj" % self.folder, "<AdditionalDependencies>", "<AdditionalDependencies>WinMM.lib;version.lib;Imm32.lib;")
 
+        vcvars_cmd = vcvars_command(self.settings)
         cd_build = "cd %s\VisualC" % self.folder
-        self.run("%s && %s && devenv SDL_ttf.sln /upgrade" % (cd_build, env.command_line))
-        self.run("%s && %s && msbuild SDL_ttf.sln" % (cd_build, env.command_line))
+        command = "%s && %s && %s && devenv SDL_ttf.sln /upgrade" % (vcvars_cmd, cd_build, env.command_line)
+        self.output.warn(command)
+        self.run(command)
+        self.run("%s && %s && %s && msbuild SDL_ttf.sln" % (vcvars_cmd, cd_build, env.command_line))
 
     def build_with_make(self):
 
@@ -59,7 +61,6 @@ class SDL2TTfConan(ConanFile):
         else:
             env_line = env.command_line
 
-        print(self.deps_cpp_info)
         # env_line = env_line.replace('LIBS="', 'LIBS2="') # Rare error if LIBS is kept
         sdl2_config_path = os.path.join(self.deps_cpp_info["SDL2"].lib_paths[0], "sdl2-config")
         self.run("cd %s" % self.folder)
