@@ -23,6 +23,8 @@ class SDL2TTfConan(ConanFile):
         self.options["SDL2"].shared = self.options.shared
         if self.settings.os == "Windows":
             self.options.remove("fPIC")
+        if self.settings.os == "Linux":
+            self.run("sudo apt-get update")
             
 
     def source(self):
@@ -48,9 +50,9 @@ class SDL2TTfConan(ConanFile):
         replace_in_file("%s\VisualC\showfont\showfont.vcxproj" % self.folder, "<Link>", "<Link>%s</AdditionalLibraryDirectories>" % libdirs_ext)
         replace_in_file("%s\VisualC\showfont\showfont.vcxproj" % self.folder, "<AdditionalDependencies>", "<AdditionalDependencies>WinMM.lib;version.lib;Imm32.lib;")
 
-        #vcvars_cmd = vcvars_command(self.settings)
+        vcvars_cmd = vcvars_command(self.settings)
         cd_build = "cd %s\VisualC" % self.folder
-        command = "%s && %s && devenv SDL_ttf.sln /upgrade" % (cd_build, env.command_line)
+        command = "%s && %s && %s && devenv SDL_ttf.sln /upgrade" % (cd_build, env.command_line)
         self.output.warn(command)
         self.run(command)
         self.run("%s && %s && %s && msbuild SDL_ttf.sln" % (vcvars_cmd, cd_build, env.command_line))
