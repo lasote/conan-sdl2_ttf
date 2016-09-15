@@ -23,7 +23,7 @@ class SDL2TTfConan(ConanFile):
         self.options["SDL2"].shared = self.options.shared
         if self.settings.os == "Windows":
             self.options.remove("fPIC")
-            self.options.remove("shared")
+            
 
     def source(self):
         zip_name = "%s.tar.gz" % self.folder
