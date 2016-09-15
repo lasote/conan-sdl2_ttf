@@ -11,7 +11,7 @@ class SDL2TTfConan(ConanFile):
     folder = "SDL2_ttf-%s" % version
     settings = "os", "arch", "compiler", "build_type"
     options = {"shared": [True, False], "fPIC": [True, False]}
-    default_options = '''shared=True
+    default_options = '''shared=False
     fPIC=True'''
     generators = "cmake", "txt"
     url="http://github.com/lasote/conan-SDL2_ttf"
@@ -19,9 +19,11 @@ class SDL2TTfConan(ConanFile):
     license="MIT"
 
     def configure(self):
-        # del self.settings.compiler.libcxx
+        del self.settings.compiler.libcxx
         self.options["SDL2"].shared = self.options.shared
-
+        if self.settings.os == "Windows":
+            self.options.remove("fPIC")
+            self.options.remove("shared")
 
     def source(self):
         zip_name = "%s.tar.gz" % self.folder
@@ -54,15 +56,16 @@ class SDL2TTfConan(ConanFile):
         self.run("%s && %s && %s && msbuild SDL_ttf.sln" % (vcvars_cmd, cd_build, env.command_line))
 
     def build_with_make(self):
-
+        
         env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
         if self.options.fPIC:
             env_line = env.command_line.replace('CFLAGS="', 'CFLAGS="-fPIC ')
         else:
             env_line = env.command_line
 
-        # env_line = env_line.replace('LIBS="', 'LIBS2="') # Rare error if LIBS is kept
+        #env_line = env_line.replace('LIBS="', 'LIBS2="') # Rare error if LIBS is kept
         sdl2_config_path = os.path.join(self.deps_cpp_info["SDL2"].lib_paths[0], "sdl2-config")
+        
         self.run("cd %s" % self.folder)
         self.run("chmod a+x %s/configure" % self.folder)
         self.run("chmod a+x %s" % sdl2_config_path)
@@ -109,7 +112,6 @@ class SDL2TTfConan(ConanFile):
         new_str = '\nCFLAGS =%s %s %s %s\n# Commented by conan: CFLAGS =' % (" ".join(self.deps_cpp_info.cflags), fpic, m32, debug)
         replace_in_file("%s/Makefile" % self.folder, old_str, new_str)
 
-
         self.output.warn(str(self.deps_cpp_info.libs))
 
         self.run("cd %s && %s make" % (self.folder, env_line))
@@ -129,12 +131,10 @@ class SDL2TTfConan(ConanFile):
             self.copy(pattern="*1.dll", dst="bin", src="%s" % self.folder, keep_path=False)
         # UNIX
         elif self.options.shared:
-            self.copy(pattern="*.a", dst="lib", src="%s" % self.folder, keep_path=False)
-            self.copy(pattern="*.a", dst="lib", src="%s" % self.folder, keep_path=False)
-        else:
             self.copy(pattern="*.so*", dst="lib", src="%s" % self.folder, keep_path=False)
             self.copy(pattern="*.dylib*", dst="lib", src="%s" % self.folder, keep_path=False)
+        else:
+            self.copy(pattern="*.a", dst="lib", src="%s" % self.folder, keep_path=False)
 
     def package_info(self):
-
         self.cpp_info.libs = ["SDL2_ttf"]

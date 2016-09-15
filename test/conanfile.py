@@ -4,7 +4,7 @@ import os
 from StringIO import StringIO
 
 ############### CONFIGURE THESE VALUES ##################
-default_user = "lasote"
+default_user = "coding3d"
 default_channel = "testing"
 #########################################################
 
