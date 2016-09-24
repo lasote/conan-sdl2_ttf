@@ -7,7 +7,7 @@ environment:
     
     CONAN_UPLOAD: 1
     CONAN_REFERENCE: "SDL2_ttf/2.0.14"
-    CONAN_USERNAME: "lasote"
+    CONAN_USERNAME: "coding3d"
     CONAN_CHANNEL: "ci"
     CONAN_TOTAL_PAGES: 5
     
